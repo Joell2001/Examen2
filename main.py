@@ -1,5 +1,6 @@
 # Import Python Libraries
 import streamlit as st
+import matplotlib.pyplot as plt
 import pandas as pd
 from streamlit_option_menu import option_menu
 import plotly.express as px
@@ -69,8 +70,39 @@ if options == "Data":
 
         selected_columns = ['NPD_WELL_BORE_NAME', 'DATEPRD', 'BORE_OIL_VOL', 'BORE_GAS_VOL', 'BORE_WAT_VOL']
         extracted_data = df[selected_columns]
+        wells_data = {pozo: data for pozo, data in extracted_data.groupby('NPD_WELL_BORE_NAME')}
 
+        pozo_seleccionado = st.selectbox("Selecciona un pozo:", list(wells_data.keys()))
 
+        data_seleccionada = wells_data[pozo_seleccionado]
+        annual_data = data_seleccionada.groupby('DATEPRD').agg({'BORE_OIL_VOL': 'sum', 'BORE_GAS_VOL': 'sum','BORE_WAT_VOL': 'sum'}).reset_index()
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(annual_data['DATEPRD'], annual_data['BORE_OIL_VOL'], label='Oil', marker='o')
+        ax.plot(annual_data['DATEPRD'], annual_data['BORE_GAS_VOL'], label='GAS', marker='s')
+        ax.plot(annual_data['DATEPRD'], annual_data['BORE_WAT_VOL'], label='WATER',
+                marker='o')
+
+        ax.set_title(f"Producción del pozo {pozo_seleccionado} por Año")
+        ax.set_xlabel('Año')
+        ax.set_ylabel('Producción total (bbl/año o m3/año)')
+        ax.legend()
+        ax.grid(True)
+
+        st.pyplot(fig)
 
     except Exception as e:
         st.error(f"Error al procesar el archivo: {e}")
+# Generar archivo requirements.txt
+with open('requirements.txt', 'w') as f:
+    f.write("streamlit\n")
+    f.write("pandas\n")
+    f.write("plotly\n")
+    f.write("numpy\n")
+    f.write("matplotlib\n")
+    f.write("scipy\n")
+
+
+
+
+
